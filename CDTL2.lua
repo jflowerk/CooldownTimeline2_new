@@ -14,11 +14,14 @@ CDTL2.GUI = LibStub("AceGUI-3.0")
 local _, _, _, tocversion = GetBuildInfo()
 CDTL2.tocversion = tocversion
 
--- Use AceEvent-3.0 (mixed into CDTL2) for event registration.
--- Creating a Frame at load time and calling RegisterEvent on it later
--- triggers ADDON_ACTION_FORBIDDEN at login because the frame inherits
--- taint from the loading context. AceEvent uses its own properly-scoped
--- dispatcher and dispatches to CDTL2[event] methods automatically.
+-- Register events at file-load time (clean context) rather than in
+-- OnEnable. AceAddon's OnEnable can be invoked from a tainted
+-- ADDON_LOADED handler (e.g. when other addons force-load us), and
+-- C_Timer.After preserves its caller's taint, so deferred registration
+-- still produces ADDON_ACTION_FORBIDDEN. File load runs before any
+-- other addon can taint our execution, so AceEvent30Frame:RegisterEvent
+-- is safe here. Handlers (CDTL2:<EVENT>) are resolved lazily when the
+-- event fires, so they don't need to exist yet.
 local function CDTL2RegisterEvent(event)
 	CDTL2:RegisterEvent(event)
 end
@@ -38,6 +41,18 @@ local coreEvents = {
 }
 if tocversion < 20000 then
 	table.insert(coreEvents, "RUNE_UPDATED")
+end
+for _, eventName in ipairs(coreEvents) do
+	CDTL2:RegisterEvent(eventName)
+end
+CDTL2.eventsRegistered = true
+
+-- RUNE_POWER_UPDATE only fires for Death Knights. Register it here at
+-- load time so it doesn't end up inside a tainted OnEnable callback.
+local _, playerClass = UnitClass("player")
+if playerClass == "DEATHKNIGHT" then
+	CDTL2:RegisterEvent("RUNE_POWER_UPDATE")
+	CDTL2.runeEventRegistered = true
 end
 
 -- Cached local reference for secret value checking (performance optimization)
@@ -2133,20 +2148,8 @@ function CDTL2:OnInitialize()
 end
 
 function CDTL2:OnEnable()
-	-- Defer event registration to escape tainted execution context.
-	-- AceAddon (via AdiBagsEx) can enable addons during a tainted
-	-- ADDON_LOADED handler triggered by Blizzard's LoadAddOn chain.
-	-- C_Timer.After(0) fires in the same frame batch (still tainted),
-	-- but a real delay (0.5s) fires in a new frame with clean context.
-	if not CDTL2.eventsRegistered then
-		CDTL2.eventsRegistered = true
-		C_Timer.After(0.5, function()
-			for _, eventName in ipairs(coreEvents) do
-				CDTL2RegisterEvent(eventName)
-			end
-		end)
-	end
-
+	-- Core events are registered at file-load time (see top of file) to
+	-- avoid ADDON_ACTION_FORBIDDEN from tainted OnEnable contexts.
 	CDTL2:Cleanup()
 
 	CDTL2:CreateLanes()
@@ -2185,11 +2188,9 @@ function CDTL2:OnEnable()
 
 		CDTL2:ScanCurrentCooldowns(CDTL2.player["class"], CDTL2.player["race"])
 
-		if CDTL2.player["class"] == "DEATHKNIGHT" and not CDTL2.runeEventRegistered then
-			CDTL2RegisterEvent("RUNE_POWER_UPDATE")
-			CDTL2.runeEventRegistered = true
-		end
-		
+		-- RUNE_POWER_UPDATE is registered at file-load time (see top of file)
+		-- to avoid ADDON_ACTION_FORBIDDEN from tainted OnEnable contexts.
+
 		CDTL2:RefreshLane(1)
 		CDTL2:RefreshLane(2)
 		CDTL2:RefreshLane(3)
