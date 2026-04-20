@@ -14,17 +14,14 @@ CDTL2.GUI = LibStub("AceGUI-3.0")
 local _, _, _, tocversion = GetBuildInfo()
 CDTL2.tocversion = tocversion
 
--- Register events at file-load time (clean context) rather than in
--- OnEnable. AceAddon's OnEnable can be invoked from a tainted
--- ADDON_LOADED handler (e.g. when other addons force-load us), and
--- C_Timer.After preserves its caller's taint, so deferred registration
--- still produces ADDON_ACTION_FORBIDDEN. File load runs before any
--- other addon can taint our execution, so AceEvent30Frame:RegisterEvent
--- is safe here. Handlers (CDTL2:<EVENT>) are resolved lazily when the
--- event fires, so they don't need to exist yet.
-local function CDTL2RegisterEvent(event)
-	CDTL2:RegisterEvent(event)
-end
+-- Event registration is performed at the bottom of this file (after
+-- handler methods are defined), still at file-load time. File load
+-- runs in a clean context before other addons can taint us, which
+-- avoids ADDON_ACTION_FORBIDDEN that occurred when registration was
+-- deferred to OnEnable (tainted) or via C_Timer.After (inherits taint).
+-- AceEvent-3.0 (via CallbackHandler) requires the method to exist on
+-- self at registration time, so registration must happen after the
+-- CDTL2:<EVENT> functions are defined below.
 local coreEvents = {
 	"PLAYER_ENTERING_WORLD",
 	"GROUP_JOINED",
@@ -41,18 +38,6 @@ local coreEvents = {
 }
 if tocversion < 20000 then
 	table.insert(coreEvents, "RUNE_UPDATED")
-end
-for _, eventName in ipairs(coreEvents) do
-	CDTL2:RegisterEvent(eventName)
-end
-CDTL2.eventsRegistered = true
-
--- RUNE_POWER_UPDATE only fires for Death Knights. Register it here at
--- load time so it doesn't end up inside a tainted OnEnable callback.
-local _, playerClass = UnitClass("player")
-if playerClass == "DEATHKNIGHT" then
-	CDTL2:RegisterEvent("RUNE_POWER_UPDATE")
-	CDTL2.runeEventRegistered = true
 end
 
 -- Cached local reference for secret value checking (performance optimization)
@@ -3629,4 +3614,19 @@ function IsNewerVersion()
 	end
 
 	return false
+end
+
+-- Register events at file-load time (clean context). See comment near
+-- the top of this file next to the coreEvents table for rationale.
+-- This runs after all CDTL2:<EVENT> handler methods have been defined,
+-- which is required by AceEvent-3.0/CallbackHandler-1.0.
+for _, eventName in ipairs(coreEvents) do
+	CDTL2:RegisterEvent(eventName)
+end
+CDTL2.eventsRegistered = true
+
+local _, _playerClass = UnitClass("player")
+if _playerClass == "DEATHKNIGHT" then
+	CDTL2:RegisterEvent("RUNE_POWER_UPDATE")
+	CDTL2.runeEventRegistered = true
 end
