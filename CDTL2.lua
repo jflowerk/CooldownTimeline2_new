@@ -14,11 +14,35 @@ CDTL2.GUI = LibStub("AceGUI-3.0")
 local _, _, _, tocversion = GetBuildInfo()
 CDTL2.tocversion = tocversion
 
--- Event registration happens in EventFrame.xml (loaded via TOC). The
--- XML template loader creates the frame and calls RegisterEvent from
--- a game-initiated context, which sidesteps the ADDON_ACTION_FORBIDDEN
--- warnings caused by Lua main-chunk taint under strict 12.0 tracking.
--- The XML OnEvent script dispatches to CDTL2:<EVENT> methods directly.
+-- Private event frame used for direct event registration.
+-- Some game clients treat securecallfunction as protected in addon code,
+-- which can trigger ADDON_ACTION_FORBIDDEN during load.
+local CDTL2EventFrame = CreateFrame("Frame")
+local function CDTL2RegisterEvent(event)
+	CDTL2EventFrame:RegisterEvent(event)
+end
+local coreEvents = {
+	"PLAYER_ENTERING_WORLD",
+	"GROUP_JOINED",
+	"GROUP_LEFT",
+	"COMBAT_LOG_EVENT_UNFILTERED",
+	"SPELL_UPDATE_CHARGES",
+	"UNIT_SPELLCAST_SUCCEEDED",
+	"ITEM_LOCK_CHANGED",
+	"PLAYER_REGEN_DISABLED",
+	"PLAYER_REGEN_ENABLED",
+	"UNIT_POWER_FREQUENT",
+	"UNIT_POWER_UPDATE",
+	"ACTIVE_TALENT_GROUP_CHANGED",
+}
+if tocversion < 20000 then
+	table.insert(coreEvents, "RUNE_UPDATED")
+end
+CDTL2EventFrame:SetScript("OnEvent", function(self, event, ...)
+	if CDTL2[event] then
+		CDTL2[event](CDTL2, event, ...)
+	end
+end)
 
 -- Cached local reference for secret value checking (performance optimization)
 -- Avoids global lookup + method dispatch on every call in hot loops
@@ -2113,8 +2137,20 @@ function CDTL2:OnInitialize()
 end
 
 function CDTL2:OnEnable()
-	-- Core events are registered at file-load time (see top of file) to
-	-- avoid ADDON_ACTION_FORBIDDEN from tainted OnEnable contexts.
+	-- Defer event registration to escape tainted execution context.
+	-- AceAddon (via AdiBagsEx) can enable addons during a tainted
+	-- ADDON_LOADED handler triggered by Blizzard's LoadAddOn chain.
+	-- C_Timer.After(0) fires in the same frame batch (still tainted),
+	-- but a real delay (0.5s) fires in a new frame with clean context.
+	if not CDTL2.eventsRegistered then
+		CDTL2.eventsRegistered = true
+		C_Timer.After(0.5, function()
+			for _, eventName in ipairs(coreEvents) do
+				CDTL2RegisterEvent(eventName)
+			end
+		end)
+	end
+
 	CDTL2:Cleanup()
 
 	CDTL2:CreateLanes()
@@ -2153,9 +2189,11 @@ function CDTL2:OnEnable()
 
 		CDTL2:ScanCurrentCooldowns(CDTL2.player["class"], CDTL2.player["race"])
 
-		-- RUNE_POWER_UPDATE is registered at file-load time (see top of file)
-		-- to avoid ADDON_ACTION_FORBIDDEN from tainted OnEnable contexts.
-
+		if CDTL2.player["class"] == "DEATHKNIGHT" and not CDTL2.runeEventRegistered then
+			CDTL2RegisterEvent("RUNE_POWER_UPDATE")
+			CDTL2.runeEventRegistered = true
+		end
+		
 		CDTL2:RefreshLane(1)
 		CDTL2:RefreshLane(2)
 		CDTL2:RefreshLane(3)
@@ -3594,11 +3632,4 @@ function IsNewerVersion()
 	end
 
 	return false
-end
-
--- Event registration is handled by EventFrame.xml (loaded via TOC).
-CDTL2.eventsRegistered = true
-local _, _playerClass = UnitClass("player")
-if _playerClass == "DEATHKNIGHT" then
-	CDTL2.runeEventRegistered = true
 end
