@@ -14,12 +14,13 @@ CDTL2.GUI = LibStub("AceGUI-3.0")
 local _, _, _, tocversion = GetBuildInfo()
 CDTL2.tocversion = tocversion
 
--- Private event frame used for direct event registration.
--- Some game clients treat securecallfunction as protected in addon code,
--- which can trigger ADDON_ACTION_FORBIDDEN during load.
-local CDTL2EventFrame = CreateFrame("Frame")
+-- Use AceEvent-3.0 (mixed into CDTL2) for event registration.
+-- Creating a Frame at load time and calling RegisterEvent on it later
+-- triggers ADDON_ACTION_FORBIDDEN at login because the frame inherits
+-- taint from the loading context. AceEvent uses its own properly-scoped
+-- dispatcher and dispatches to CDTL2[event] methods automatically.
 local function CDTL2RegisterEvent(event)
-	CDTL2EventFrame:RegisterEvent(event)
+	CDTL2:RegisterEvent(event)
 end
 local coreEvents = {
 	"PLAYER_ENTERING_WORLD",
@@ -38,11 +39,6 @@ local coreEvents = {
 if tocversion < 20000 then
 	table.insert(coreEvents, "RUNE_UPDATED")
 end
-CDTL2EventFrame:SetScript("OnEvent", function(self, event, ...)
-	if CDTL2[event] then
-		CDTL2[event](CDTL2, event, ...)
-	end
-end)
 
 -- Cached local reference for secret value checking (performance optimization)
 -- Avoids global lookup + method dispatch on every call in hot loops
