@@ -8,6 +8,7 @@
 ## OptionalDeps: Masque
 
 embeds.xml
+EventFrame.xml
 
 CDTL2.lua
 Data.lua

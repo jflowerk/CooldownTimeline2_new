@@ -14,30 +14,11 @@ CDTL2.GUI = LibStub("AceGUI-3.0")
 local _, _, _, tocversion = GetBuildInfo()
 CDTL2.tocversion = tocversion
 
--- Private event frame used for all event registration.
--- AceEvent30Frame is shared across every addon that embeds AceEvent-3.0,
--- so if any earlier-loading addon taints it (directly or via the global
--- LoadAddOn chain), every subsequent RegisterEvent call on that frame
--- triggers ADDON_ACTION_FORBIDDEN. A private frame created in our own
--- main chunk avoids that shared-taint path.
-local CDTL2EventFrame = CreateFrame("Frame")
-local coreEvents = {
-	"PLAYER_ENTERING_WORLD",
-	"GROUP_JOINED",
-	"GROUP_LEFT",
-	"COMBAT_LOG_EVENT_UNFILTERED",
-	"SPELL_UPDATE_CHARGES",
-	"UNIT_SPELLCAST_SUCCEEDED",
-	"ITEM_LOCK_CHANGED",
-	"PLAYER_REGEN_DISABLED",
-	"PLAYER_REGEN_ENABLED",
-	"UNIT_POWER_FREQUENT",
-	"UNIT_POWER_UPDATE",
-	"ACTIVE_TALENT_GROUP_CHANGED",
-}
-if tocversion < 20000 then
-	table.insert(coreEvents, "RUNE_UPDATED")
-end
+-- Event registration happens in EventFrame.xml (loaded via TOC). The
+-- XML template loader creates the frame and calls RegisterEvent from
+-- a game-initiated context, which sidesteps the ADDON_ACTION_FORBIDDEN
+-- warnings caused by Lua main-chunk taint under strict 12.0 tracking.
+-- The XML OnEvent script dispatches to CDTL2:<EVENT> methods directly.
 
 -- Cached local reference for secret value checking (performance optimization)
 -- Avoids global lookup + method dispatch on every call in hot loops
@@ -3615,23 +3596,9 @@ function IsNewerVersion()
 	return false
 end
 
--- Wire up the private event frame. Dispatch to CDTL2:<EVENT> methods so
--- existing handlers work unchanged. Both the frame creation (top of file)
--- and the RegisterEvent calls below happen in the main chunk, which is
--- a clean context — this is what avoids ADDON_ACTION_FORBIDDEN.
-CDTL2EventFrame:SetScript("OnEvent", function(self, event, ...)
-	local handler = CDTL2[event]
-	if handler then
-		handler(CDTL2, event, ...)
-	end
-end)
-for _, eventName in ipairs(coreEvents) do
-	CDTL2EventFrame:RegisterEvent(eventName)
-end
+-- Event registration is handled by EventFrame.xml (loaded via TOC).
 CDTL2.eventsRegistered = true
-
 local _, _playerClass = UnitClass("player")
 if _playerClass == "DEATHKNIGHT" then
-	CDTL2EventFrame:RegisterEvent("RUNE_POWER_UPDATE")
 	CDTL2.runeEventRegistered = true
 end
