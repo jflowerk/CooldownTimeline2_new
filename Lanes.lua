@@ -427,7 +427,7 @@ private.RefreshText = function(f, s)
 				)
 		end
 		
-		tObject:SetFont(CDTL2.LSM:Fetch("font", tSettings["font"]), tSettings["size"], tSettings["outline"] == "NONE" and "" or tSettings["outline"])
+		tObject:SetFont(CDTL2.LSM:Fetch("font", tSettings["font"]), tSettings["size"], CDTL2:SanitizeOutline(tSettings["outline"]))
 		tObject:SetTextColor(
 				tSettings["color"]["r"],
 				tSettings["color"]["g"],

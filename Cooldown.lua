@@ -349,7 +349,7 @@ function CDTL2:RefreshBar(cd)
 					ts["offX"],
 					ts["offY"]
 				)
-			t:SetFont(CDTL2.LSM:Fetch("font", ts["font"]), ts["size"], ts["outline"] == "NONE" and "" or ts["outline"])
+			t:SetFont(CDTL2.LSM:Fetch("font", ts["font"]), ts["size"], CDTL2:SanitizeOutline(ts["outline"]))
 			t:SetText(CDTL2:ConvertTextTags(ts["text"], cd))
 			t:SetTextColor(
 					ts["color"]["r"],
@@ -387,7 +387,7 @@ function CDTL2:RefreshBar(cd)
 					ts["offX"],
 					ts["offY"]
 				)
-			t:SetFont(CDTL2.LSM:Fetch("font", ts["font"]), ts["size"], ts["outline"] == "NONE" and "" or ts["outline"])
+			t:SetFont(CDTL2.LSM:Fetch("font", ts["font"]), ts["size"], CDTL2:SanitizeOutline(ts["outline"]))
 			t:SetText(CDTL2:ConvertTextTags(ts["text"], cd))
 			t:SetTextColor(
 					ts["color"]["r"],
@@ -425,7 +425,7 @@ function CDTL2:RefreshBar(cd)
 					ts["offX"],
 					ts["offY"]
 				)
-			t:SetFont(CDTL2.LSM:Fetch("font", ts["font"]), ts["size"], ts["outline"] == "NONE" and "" or ts["outline"])
+			t:SetFont(CDTL2.LSM:Fetch("font", ts["font"]), ts["size"], CDTL2:SanitizeOutline(ts["outline"]))
 			t:SetText(CDTL2:ConvertTextTags(ts["text"], cd))
 			t:SetTextColor(
 					ts["color"]["r"],
@@ -620,7 +620,7 @@ function CDTL2:RefreshIcon(cd)
 					ts["offX"],
 					ts["offY"]
 				)
-			t:SetFont(CDTL2.LSM:Fetch("font", ts["font"]), ts["size"], ts["outline"] == "NONE" and "" or ts["outline"])
+			t:SetFont(CDTL2.LSM:Fetch("font", ts["font"]), ts["size"], CDTL2:SanitizeOutline(ts["outline"]))
 			t:SetText(CDTL2:ConvertTextTags(ts["text"], cd))
 			t:SetTextColor(
 					ts["color"]["r"],
@@ -658,7 +658,7 @@ function CDTL2:RefreshIcon(cd)
 					ts["offX"],
 					ts["offY"]
 				)
-			t:SetFont(CDTL2.LSM:Fetch("font", ts["font"]), ts["size"], ts["outline"] == "NONE" and "" or ts["outline"])
+			t:SetFont(CDTL2.LSM:Fetch("font", ts["font"]), ts["size"], CDTL2:SanitizeOutline(ts["outline"]))
 			t:SetText(CDTL2:ConvertTextTags(ts["text"], cd))
 			t:SetTextColor(
 					ts["color"]["r"],
@@ -696,7 +696,7 @@ function CDTL2:RefreshIcon(cd)
 					ts["offX"],
 					ts["offY"]
 				)
-			t:SetFont(CDTL2.LSM:Fetch("font", ts["font"]), ts["size"], ts["outline"] == "NONE" and "" or ts["outline"])
+			t:SetFont(CDTL2.LSM:Fetch("font", ts["font"]), ts["size"], CDTL2:SanitizeOutline(ts["outline"]))
 			t:SetText(CDTL2:ConvertTextTags(ts["text"], cd))
 			t:SetTextColor(
 					ts["color"]["r"],

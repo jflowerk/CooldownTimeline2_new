@@ -12,6 +12,23 @@ local function isSecret(value)
 	return _issecretvalue ~= nil and _issecretvalue(value)
 end
 
+-- Map legacy/invalid outline values to flags accepted by FontString:SetFont
+-- in WoW 12.0.5+ (strict validation rejects "NONE", nil, and other
+-- non-whitelisted strings). Valid flags are combinations of OUTLINE,
+-- THICKOUTLINE, MONOCHROME.
+local _validOutline = {
+	[""] = true,
+	["OUTLINE"] = true,
+	["THICKOUTLINE"] = true,
+	["MONOCHROME"] = true,
+	["OUTLINE, MONOCHROME"] = true,
+	["THICKOUTLINE, MONOCHROME"] = true,
+}
+function CDTL2:SanitizeOutline(flag)
+	if _validOutline[flag] then return flag end
+	return ""
+end
+
 function CDTL2:AddUsedBy(type, id, guid)
 	for _, data in pairs(CDTL2.db.profile.tables[type]) do
 		if data["id"] == id then
