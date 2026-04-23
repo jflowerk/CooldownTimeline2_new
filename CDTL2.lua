@@ -44,6 +44,34 @@ CDTL2EventFrame:SetScript("OnEvent", function(self, event, ...)
 	end
 end)
 
+-- TEMP DIAGNOSTIC: hook FontString:SetFont to log failing calls with
+-- their args and a traceback, so we can identify the single 1x SetFont
+-- error at login. Remove this block once the culprit is fixed.
+do
+	local _probe = UIParent:CreateFontString(nil, "ARTWORK")
+	local _fontMeta = getmetatable(_probe)
+	if _fontMeta and _fontMeta.__index and _fontMeta.__index.SetFont then
+		local _origSetFont = _fontMeta.__index.SetFont
+		_fontMeta.__index.SetFont = function(self, fontFile, fontHeight, flags, ...)
+			local ok, err = pcall(_origSetFont, self, fontFile, fontHeight, flags, ...)
+			if not ok then
+				local name = "?"
+				if self and self.GetName then name = tostring(self:GetName() or "<anon>") end
+				print(string.format(
+					"|cffff8888CDTL2_DBG SetFont FAIL|r name=%s font=%s size=%s flags=%s err=%s",
+					name,
+					tostring(fontFile),
+					tostring(fontHeight),
+					tostring(flags),
+					tostring(err)
+				))
+				print(debugstack(2, 6, 0))
+			end
+			return ok
+		end
+	end
+end
+
 -- Cached local reference for secret value checking (performance optimization)
 -- Avoids global lookup + method dispatch on every call in hot loops
 local _issecretvalue = issecretvalue
