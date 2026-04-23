@@ -349,7 +349,7 @@ function CDTL2:RefreshBar(cd)
 					ts["offX"],
 					ts["offY"]
 				)
-			t:SetFont(CDTL2.LSM:Fetch("font", ts["font"]), ts["size"], ts["outline"])
+			t:SetFont(CDTL2.LSM:Fetch("font", ts["font"]), ts["size"], ts["outline"] == "NONE" and "" or ts["outline"])
 			t:SetText(CDTL2:ConvertTextTags(ts["text"], cd))
 			t:SetTextColor(
 					ts["color"]["r"],
@@ -387,7 +387,7 @@ function CDTL2:RefreshBar(cd)
 					ts["offX"],
 					ts["offY"]
 				)
-			t:SetFont(CDTL2.LSM:Fetch("font", ts["font"]), ts["size"], ts["outline"])
+			t:SetFont(CDTL2.LSM:Fetch("font", ts["font"]), ts["size"], ts["outline"] == "NONE" and "" or ts["outline"])
 			t:SetText(CDTL2:ConvertTextTags(ts["text"], cd))
 			t:SetTextColor(
 					ts["color"]["r"],
@@ -425,7 +425,7 @@ function CDTL2:RefreshBar(cd)
 					ts["offX"],
 					ts["offY"]
 				)
-			t:SetFont(CDTL2.LSM:Fetch("font", ts["font"]), ts["size"], ts["outline"])
+			t:SetFont(CDTL2.LSM:Fetch("font", ts["font"]), ts["size"], ts["outline"] == "NONE" and "" or ts["outline"])
 			t:SetText(CDTL2:ConvertTextTags(ts["text"], cd))
 			t:SetTextColor(
 					ts["color"]["r"],
@@ -499,7 +499,7 @@ function CDTL2:RefreshBar(cd)
 	-- DEBUG/UNLOCK
 	f.db:ClearAllPoints()
 	f.db:SetPoint("CENTER", 0, 0)
-	f.db.text:SetFont(CDTL2.LSM:Fetch("font", "Fira Sans Condensed"), 10, "NONE")
+	f.db.text:SetFont(CDTL2.LSM:Fetch("font", "Fira Sans Condensed"), 10, "")
 	f.db.text:ClearAllPoints()
 	f.db.text:SetPoint("CENTER", 0, 0)
 	f.db.text:SetText(cd.data["uid"].."_B\n"..cd.data["name"])
@@ -620,7 +620,7 @@ function CDTL2:RefreshIcon(cd)
 					ts["offX"],
 					ts["offY"]
 				)
-			t:SetFont(CDTL2.LSM:Fetch("font", ts["font"]), ts["size"], ts["outline"])
+			t:SetFont(CDTL2.LSM:Fetch("font", ts["font"]), ts["size"], ts["outline"] == "NONE" and "" or ts["outline"])
 			t:SetText(CDTL2:ConvertTextTags(ts["text"], cd))
 			t:SetTextColor(
 					ts["color"]["r"],
@@ -658,7 +658,7 @@ function CDTL2:RefreshIcon(cd)
 					ts["offX"],
 					ts["offY"]
 				)
-			t:SetFont(CDTL2.LSM:Fetch("font", ts["font"]), ts["size"], ts["outline"])
+			t:SetFont(CDTL2.LSM:Fetch("font", ts["font"]), ts["size"], ts["outline"] == "NONE" and "" or ts["outline"])
 			t:SetText(CDTL2:ConvertTextTags(ts["text"], cd))
 			t:SetTextColor(
 					ts["color"]["r"],
@@ -696,7 +696,7 @@ function CDTL2:RefreshIcon(cd)
 					ts["offX"],
 					ts["offY"]
 				)
-			t:SetFont(CDTL2.LSM:Fetch("font", ts["font"]), ts["size"], ts["outline"])
+			t:SetFont(CDTL2.LSM:Fetch("font", ts["font"]), ts["size"], ts["outline"] == "NONE" and "" or ts["outline"])
 			t:SetText(CDTL2:ConvertTextTags(ts["text"], cd))
 			t:SetTextColor(
 					ts["color"]["r"],
@@ -861,7 +861,7 @@ function CDTL2:RefreshIcon(cd)
 	-- DEBUG/UNLOCK
 	f.db:ClearAllPoints()
 	f.db:SetPoint("CENTER", 0, 0)
-	f.db.text:SetFont(CDTL2.LSM:Fetch("font", "Fira Sans Condensed"), 10, "NONE")
+	f.db.text:SetFont(CDTL2.LSM:Fetch("font", "Fira Sans Condensed"), 10, "")
 	f.db.text:ClearAllPoints()
 	f.db.text:SetPoint("CENTER", 0, 0)
 	f.db.text:SetText(cd.data["uid"].."_B\n"..cd.data["name"])

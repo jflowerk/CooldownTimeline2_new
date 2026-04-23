@@ -195,7 +195,7 @@ function CDTL2:RefreshLane(i)
 	-- DEBUG/UNLOCK
 	f.db:ClearAllPoints()
 	f.db:SetPoint("CENTER", 0, 0)
-	f.db.text:SetFont(CDTL2.LSM:Fetch("font", "Fira Sans Condensed"), 12, "NONE")
+	f.db.text:SetFont(CDTL2.LSM:Fetch("font", "Fira Sans Condensed"), 12, "")
 	f.db.text:ClearAllPoints()
 	f.db.text:SetPoint("CENTER", 0, 0)
 	f.db.text:SetText(f.name)
@@ -427,7 +427,7 @@ private.RefreshText = function(f, s)
 				)
 		end
 		
-		tObject:SetFont(CDTL2.LSM:Fetch("font", tSettings["font"]), tSettings["size"], tSettings["outline"])
+		tObject:SetFont(CDTL2.LSM:Fetch("font", tSettings["font"]), tSettings["size"], tSettings["outline"] == "NONE" and "" or tSettings["outline"])
 		tObject:SetTextColor(
 				tSettings["color"]["r"],
 				tSettings["color"]["g"],
