@@ -101,18 +101,21 @@ function CDTL2:CreateCooldown(UID, cdType, cdData)
 	if cdData["trigger"] then
 		f.data["trigger"] = cdData["trigger"]
 	end
-	
+
+	f.icon = CDTL2:CreateIcon(fName, f)
+	CDTL2:SendToLane(f)
+
+	f.bar = CDTL2:CreateBar(fName, f)
+	CDTL2:SendToBarFrame(f)
+
 	-- ON UPDATE
+	-- Hook after f.icon and f.bar are assigned; OnUpdate can fire on the
+	-- same tick the frame is created (seen in 12.0.5), and CooldownUpdate
+	-- indexes both immediately.
 	f:HookScript("OnUpdate", function(self, elapsed)
 		private.CooldownUpdate(self, elapsed)
 	end)
-	
-	f.icon = CDTL2:CreateIcon(fName, f)
-	CDTL2:SendToLane(f) 
-	
-	f.bar = CDTL2:CreateBar(fName, f)
-	CDTL2:SendToBarFrame(f)
-	
+
 	table.insert(CDTL2.cooldowns, f)
 	
 	return f
