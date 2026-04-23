@@ -2137,19 +2137,11 @@ function CDTL2:OnInitialize()
 end
 
 function CDTL2:OnEnable()
-	-- Defer event registration to escape tainted execution context.
-	-- AceAddon (via AdiBagsEx) can enable addons during a tainted
-	-- ADDON_LOADED handler triggered by Blizzard's LoadAddOn chain.
-	-- C_Timer.After(0) fires in the same frame batch (still tainted),
-	-- but a real delay (0.5s) fires in a new frame with clean context.
-	if not CDTL2.eventsRegistered then
-		CDTL2.eventsRegistered = true
-		C_Timer.After(0.5, function()
-			for _, eventName in ipairs(coreEvents) do
-				CDTL2RegisterEvent(eventName)
-			end
-		end)
-	end
+	-- Core events are registered at the end of this file (main chunk)
+	-- because in 12.0.5 deferring via C_Timer.After propagates taint and
+	-- the RegisterEvent calls get actively blocked, not just warned -
+	-- which silently killed UNIT_SPELLCAST_SUCCEEDED and all other
+	-- runtime spell tracking.
 
 	CDTL2:Cleanup()
 
@@ -2189,11 +2181,9 @@ function CDTL2:OnEnable()
 
 		CDTL2:ScanCurrentCooldowns(CDTL2.player["class"], CDTL2.player["race"])
 
-		if CDTL2.player["class"] == "DEATHKNIGHT" and not CDTL2.runeEventRegistered then
-			CDTL2RegisterEvent("RUNE_POWER_UPDATE")
-			CDTL2.runeEventRegistered = true
-		end
-		
+		-- RUNE_POWER_UPDATE is registered at file-load time (see bottom
+		-- of this file) to avoid taint-blocked RegisterEvent in 12.0.5.
+
 		CDTL2:RefreshLane(1)
 		CDTL2:RefreshLane(2)
 		CDTL2:RefreshLane(3)
@@ -3632,4 +3622,25 @@ function IsNewerVersion()
 	end
 
 	return false
+end
+
+-- Register events at file-load time (main chunk, cleanest context).
+-- In 12.0.5 strict taint mode, deferring registration via
+-- C_Timer.After from OnEnable causes the RegisterEvent calls to be
+-- actively blocked (not just warned), which killed runtime tracking
+-- like UNIT_SPELLCAST_SUCCEEDED. The ADDON_ACTION_FORBIDDEN warning
+-- may still appear here due to shared-library taint from other
+-- addons, but the registration itself succeeds from this context.
+-- Handler methods (CDTL2:<EVENT>) are defined above, so the frame's
+-- OnEvent dispatcher at the top of the file can find them when
+-- events fire.
+for _, eventName in ipairs(coreEvents) do
+	CDTL2RegisterEvent(eventName)
+end
+CDTL2.eventsRegistered = true
+
+local _, _playerClass = UnitClass("player")
+if _playerClass == "DEATHKNIGHT" then
+	CDTL2RegisterEvent("RUNE_POWER_UPDATE")
+	CDTL2.runeEventRegistered = true
 end
